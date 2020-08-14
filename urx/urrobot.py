@@ -468,6 +468,11 @@ class URRobot(object):
             # This is a non-existant program, but running it will stop freedrive
             self.send_program("def myProg():\n\tend_freedrive_mode()\nend")
 
+    def get_freedrive(self):
+        fd = self.secmon._dict["RobotModeData"]["controlMode"] == 1
+        return fd
+
+
     def set_simulation(self, val):
         if val:
             self.send_program("set sim")
