@@ -215,8 +215,8 @@ class URRobot(object):
             self.logger.debug("No threshold set, setting it to %s", threshold)
         count = 0
         while True:
-            if not self.is_running():
-                raise RobotException("Robot stopped")
+            #if not self.is_running():
+            #    raise RobotException("Robot stopped")
             dist = self._get_dist(target, joints)
             self.logger.debug("distance to target is: %s, target dist is %s", dist, threshold)
             if not self.secmon.is_program_running():
@@ -342,6 +342,26 @@ class URRobot(object):
             self._wait_for_move(pose_to, threshold=threshold)
             return self.getl()
 
+    def servojs(self, joint_positions_list, t=0.008, lookahead_time=0.1, gain=300,
+               wait=True, threshold=None):
+        header = "def myProg():\n"
+        end = "end\n"
+        prog = header
+        for idx, joint_positions in enumerate(joint_positions_list):
+            prog += self._format_servoj(joint_positions, t, lookahead_time, gain) + "\n"
+        prog += end
+        self.send_program(prog)
+        if wait:
+            self._wait_for_move(target=joint_positions_list[-1], threshold=threshold, joints=True)                
+            return self.getj()
+            
+    def _format_servoj(self, tpose, t, lookahead_time, gain):
+        tpose = [round(i, self.max_float_length) for i in tpose]
+        tpose.append(t)
+        tpose.append(lookahead_time)
+        tpose.append(gain)
+        return "servoj([{},{},{},{},{},{}], 0, 0, t={}, lookahead_time={}, gain={})".format(*tpose)
+            
     def movejs(self, joint_positions_list, acc=0.01, vel=0.01, radius=0.01,
                wait=True, threshold=None):
         """
